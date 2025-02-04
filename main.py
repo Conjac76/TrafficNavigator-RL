@@ -71,7 +71,7 @@ def main():
         )
         
         # Enhanced training loop with exploration decay
-        num_episodes = 200
+        num_episodes = 4000
         print("\nTraining agent...")
         for ep in range(num_episodes):
             state, _ = env.reset()

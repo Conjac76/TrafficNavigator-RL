@@ -42,11 +42,10 @@ Show an animated visualization of the learned path
 
 ## TODO: Feel free to add to this list
 1. **Visualization path animation is hideous**:
-    Currently in the animated path it is hard to see the path the agent is taking
-2. **Looping**:
-    Currently the path sometimes gets stuck -- last time i fixed this with forcing it to take a random move if it had visited the same spot too many times
-3. **Visualization for start and end input is ugly**:
+    Currently in the animated path it is hard to see the path the agent is taking we need to change the colors or something
+
+2. **Visualization for start and end input is ugly**:
     It should pause when I click the end goal so we can see it better  
 
-4. **....**:
+3. **....**:
     more more more

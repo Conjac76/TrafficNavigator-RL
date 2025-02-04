@@ -31,7 +31,7 @@ A reinforcement learning (Q-learning) agent that navigates traffic in a real-wor
 1. **Basic Execution**:
 
     ```bash
-    python main.py
+    python main.py --place "Los Alamitos, California, USA"
     
 **This will:**
 Download a map of Los Alamitos, California
@@ -41,12 +41,12 @@ Show an animated visualization of the learned path
 
 
 ## TODO: Feel free to add to this list
-1. **Visualization**:
+1. **Visualization path animation is hideous**:
     Currently in the animated path it is hard to see the path the agent is taking
 2. **Looping**:
     Currently the path sometimes gets stuck -- last time i fixed this with forcing it to take a random move if it had visited the same spot too many times
-3. **Take input for start and goal**:
-    We should be able to take an input for start and goal. 
+3. **Visualization for start and end input is ugly**:
+    It should pause when I click the end goal so we can see it better  
 
 4. **....**:
     more more more

@@ -32,7 +32,6 @@ A reinforcement learning (Q-learning) agent that navigates traffic in a real-wor
 
     ```bash
     python main.py
-
     
 **This will:**
 Download a map of Los Alamitos, California

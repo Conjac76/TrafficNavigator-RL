@@ -47,7 +47,6 @@ Show an animated visualization of the learned path
     Currently the path sometimes gets stuck -- last time i fixed this with forcing it to take a random move if it had visited the same spot too many times
 3. **Take input for start and goal**:
     We should be able to take an input for start and goal. 
-4. **Take input for location**:
-    We should be able to take an input for the location the agent operates in
-5. **....**:
+
+4. **....**:
     more more more

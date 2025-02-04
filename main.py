@@ -6,7 +6,7 @@ import osmnx as ox
 from environment import CityTrafficEnv
 from agent import QLearningAgent
 from utils import generate_random_traffic, get_shortest_path
-from visualization import visualize_and_animate
+from visualization import NodeSelector, visualize_and_animate
 
 def main():
     # Set up command line arguments
@@ -34,15 +34,27 @@ def main():
         for u, v, data in G.edges(data=True):
             G_undirected.add_edge(u, v, **data)
         
-        # Rest of the workflow...
+        # Generate traffic data
         traffic_dict = generate_random_traffic(G_undirected)
-        nodes_list = list(G_undirected.nodes())
-        start_node, goal_node = random.sample(nodes_list, 2)
         
+        # Interactive node selection
+        selector = NodeSelector(G_undirected, traffic_dict)
+        start_node, end_node = selector.select_nodes()
+        
+        # Validate selection
+        if start_node == end_node:
+            print("Error: Start and end nodes must be different!")
+            return
+        
+        print(f"\nSelected nodes:")
+        print(f"Start: {start_node}")
+        print(f"End: {end_node}")
+        
+        # Create environment with selected nodes
         env = CityTrafficEnv(
             graph=G_undirected,
             start_node=start_node,
-            goal_node=goal_node,
+            goal_node=end_node,
             traffic_dict=traffic_dict,
             max_steps=300
         )

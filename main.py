@@ -40,18 +40,21 @@ def run_flask_server():
 def main_workflow(place):
     print(f"\n🚀 Starting Route Optimization for {place}")
     
-    # Load and prepare graph
-    print("Loading map data...")
+    # Load graph and generate traffic data first
+    print("🗺️  Loading map data...")
     G = ox.graph_from_place(place, network_type="drive")
     G_undirected = nx.Graph(G)
     
-    # Generate selection map
-    print("Creating interactive map...")
-    selector = FoliumNodeSelector(G_undirected, {})
+    print("🚦 Generating traffic simulation...")
+    traffic_data = generate_random_traffic(G_undirected)
+    
+    # Create selection map with traffic visualization
+    print("🌍 Creating interactive traffic map...")
+    selector = FoliumNodeSelector(G_undirected, traffic_data)
     selector.create_selection_map()
     
     # Start web server
-    print("Starting web server...")
+    print("🌐 Starting web server...")
     server_thread = threading.Thread(target=run_flask_server)
     server_thread.daemon = True
     server_thread.start()
@@ -62,11 +65,11 @@ def main_workflow(place):
     webbrowser.open('http://localhost:8080')
     
     # Wait for selections
-    print("\nWaiting for node selections...")
+    print("\n⏳ Waiting for node selections...")
     selections_received.wait()
     
     # Validate selections
-    print("Validating selections...")
+    print("🔍 Validating selections...")
     start = int(selected_nodes.get('start'))
     end = int(selected_nodes.get('end'))
     
@@ -75,12 +78,8 @@ def main_workflow(place):
     if start == end:
         raise ValueError("Start and end nodes must be different")
 
-    # Generate traffic data
-    print("Generating traffic simulation...")
-    traffic_data = generate_random_traffic(G_undirected)
-    
-    # Initialize environment and agent
-    print("Initializing AI agent...")
+    # Create environment with same traffic data
+    print("🤖 Initializing AI agent...")
     env = CityTrafficEnv(
         graph=G_undirected,
         start_node=start,
@@ -99,7 +98,7 @@ def main_workflow(place):
     )
     
     # Training loop
-    print("\nTraining started:")
+    print("\n🎓 Training started:")
     for ep in range(1000):
         state, _ = env.reset()
         done = False
@@ -111,10 +110,10 @@ def main_workflow(place):
         agent.update_exploration()
 
         if (ep + 1) % 100 == 0:
-            print(f"Episode {ep+1}/1000 (ε: {agent.epsilon:.2f})")
+            print(f"   ✅ Episode {ep+1}/1000 (ε: {agent.epsilon:.2f})")
 
     # Generate results
-    print("\nGenerating optimized route...")
+    print("\n📊 Generating optimized route...")
     optimal_path = get_shortest_path(agent, env)
     visualize_route_folium(G_undirected, traffic_data, optimal_path)
     
@@ -122,7 +121,7 @@ def main_workflow(place):
     print("   ▶️  Open 'final_route_map.html' to view the optimized route")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='AI Route Optimizer')
+    parser = argparse.ArgumentParser(description='AI Traffic-Aware Route Planner')
     parser.add_argument('--place', type=str, required=True,
                        help='Location (e.g., "Los Alamitos, California, USA")')
     args = parser.parse_args()

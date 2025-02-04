@@ -38,6 +38,7 @@ def main():
         traffic_dict = generate_random_traffic(G_undirected)
         
         # Interactive node selection
+        print("\nPlease select start and end nodes on the map.")
         selector = NodeSelector(G_undirected, traffic_dict)
         start_node, end_node = selector.select_nodes()
         
@@ -59,22 +60,53 @@ def main():
             max_steps=300
         )
         
-        agent = QLearningAgent(env)
+        # Create Q-learning Agent with exploration decay
+        agent = QLearningAgent(
+            env, 
+            alpha=0.1,  # Learning rate
+            gamma=0.9,  # Discount factor
+            epsilon=0.5,  # Start with higher exploration
+            epsilon_decay=0.995,  # Decay rate per episode
+            min_epsilon=0.05  # Minimum exploration rate
+        )
         
-        # Training loop
+        # Enhanced training loop with exploration decay
         num_episodes = 200
-        for _ in range(num_episodes):
+        print("\nTraining agent...")
+        for ep in range(num_episodes):
             state, _ = env.reset()
             done = False
+            episode_reward = 0
             while not done:
                 action = agent.choose_action(state)
                 next_state, reward, done, _, _ = env.step(action)
                 agent.update(state, action, reward, next_state, done)
                 state = next_state
+                episode_reward += reward
+            agent.update_exploration()  # Decay epsilon after each episode
+            
+            # Print progress
+            if (ep + 1) % 20 == 0:
+                print(f"Episode {ep + 1}/{num_episodes} completed | "
+                      f"Epsilon: {agent.epsilon:.3f} | "
+                      f"Avg Reward: {episode_reward:.1f}")
         
-        # Test and visualize
-        path = get_shortest_path(agent, env)
-        visualize_and_animate(G_undirected, traffic_dict, path)
+        # Post-training analysis
+        print("\nTraining complete. Testing path:")
+        test_path = get_shortest_path(agent, env)
+        unique_nodes = len(set(test_path))
+        print(f"Path length: {len(test_path)} nodes")
+        print(f"Unique nodes visited: {unique_nodes}")
+        print(f"Loop efficiency: {unique_nodes/len(test_path):.1%}")
+        
+        if len(test_path) > unique_nodes * 1.2:
+            print("Warning: Significant looping detected!")
+        else:
+            print("Loop prevention working effectively!")
+        
+        # Visualize the final path
+        print("\nVisualizing final path...")
+        visualize_and_animate(G_undirected, traffic_dict, test_path)
 
     except Exception as e:
         print(f"\nError processing location: {str(e)}")

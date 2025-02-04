@@ -1,4 +1,4 @@
-# City Traffic RL Navigator 🚦🧭
+# City Traffic RL Navigator
 
 A reinforcement learning (Q-learning) agent that navigates traffic in a real-world city using OpenStreetMap data. Visualizes optimal paths with traffic-aware routing.
 

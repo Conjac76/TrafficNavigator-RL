@@ -8,7 +8,7 @@ def get_traffic_color(cost):
     elif cost <= 8: return 'red'
     else: return 'black'
 
-def visualize_route_folium(graph, traffic_dict, path, output_map="final_route_map.html"):
+def visualize_route_folium(graph, traffic_dict, path, output_map="template/final_route_map.html"):
     # 1) Print the route for debugging
     print("[visualize_route_folium] The path is:", path)
 
@@ -29,8 +29,8 @@ def visualize_route_folium(graph, traffic_dict, path, output_map="final_route_ma
         folium.PolyLine(
             locations=[(lat_u, lon_u), (lat_v, lon_v)],
             color=color, 
-            weight=2,
-            opacity=0.6
+            weight=4,
+            opacity=0.8
         ).add_to(folium_map)
 
     # 4) Convert your path node IDs into lat-lon coords

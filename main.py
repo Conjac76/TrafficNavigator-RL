@@ -4,11 +4,12 @@ import random
 import numpy as np
 import networkx as nx
 import osmnx as ox
-from flask import Flask, request, jsonify, send_from_directory
+import os
+from flask import Flask, request, jsonify, send_from_directory, render_template, redirect, url_for
 from flask_cors import CORS
 import threading
 import time
-import webbrowser
+# import webbrowser  # We'll not auto-open the browser
 from environment import CityTrafficEnv
 from agent import QLearningAgent
 from utils import generate_random_traffic, get_shortest_path
@@ -17,71 +18,78 @@ from visualization_folium import visualize_route_folium
 
 app = Flask(__name__)
 CORS(app)
-selections_received = threading.Event()
+
+# Global variables to store user data
 selected_nodes = {}
+traffic_data = {}
+G_undirected = None
+current_env = None
+agent = None
 
 @app.route('/')
+def home_page():
+    """
+    Home page: user enters City, State, Country
+    """
+    return render_template('index.html')
+
+@app.route('/initialize', methods=['POST'])
+def initialize_place():
+    """
+    Get City, State, Country from form, build place string, load graph, generate traffic, 
+    and create node_selection_map.html for interactive selection.
+    """
+    global G_undirected, traffic_data
+
+    city = request.form.get('city')
+    state = request.form.get('state')
+    country = request.form.get('country')
+    place = f"{city}, {state}, {country}"
+
+    print(f"User requested place: {place}")
+
+    # 1) Load graph
+    G = ox.graph_from_place(place, network_type="drive")
+    G_undirected = nx.Graph(G)
+
+    # 2) Generate random traffic
+    traffic_data = generate_random_traffic(G_undirected)
+
+    # 3) Create Folium map for node selection
+    selector = FoliumNodeSelector(G_undirected, traffic_data)
+    # This will save 'node_selection_map.html' in your current folder (or specify templates folder)
+    selector.create_selection_map(map_path="templates/node_selection_map.html")
+
+    # 4) Redirect user to the map page
+    return redirect(url_for('serve_map'))
+
+@app.route('/map')
 def serve_map():
-    return send_from_directory('.', 'node_selection_map.html')
+    """
+    Serves the interactive Folium map for node selection
+    """
+    return render_template('node_selection_map.html')
 
 @app.route('/selections', methods=['POST'])
 def handle_selections():
-    try:
-        data = request.get_json()
-        selected_nodes.update(data)
-        selections_received.set()
-        return jsonify({"status": "success"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    """
+    Once user selects start/end nodes, we do Q-Learning training and produce final_route_map.html.
+    Then, automatically redirect the user to the final map page.
+    """
+    global selected_nodes, G_undirected, traffic_data, current_env, agent
+    data = request.get_json()
+    selected_nodes.update(data)
 
-def run_flask_server():
-    app.run(host='0.0.0.0', port=8080, use_reloader=False)
-
-def main_workflow(place):
-    print(f"\n🚀 Starting Route Optimization for {place}")
-    
-    # Load and prepare graph
-    print("Loading map data...")
-    G = ox.graph_from_place(place, network_type="drive")
-    G_undirected = nx.Graph(G)
-    
-    # Generate selection map
-    print("Creating interactive map...")
-    selector = FoliumNodeSelector(G_undirected, {})
-    selector.create_selection_map()
-    
-    # Start web server
-    print("Starting web server...")
-    server_thread = threading.Thread(target=run_flask_server)
-    server_thread.daemon = True
-    server_thread.start()
-    
-    # Open browser
-    time.sleep(1)
-    print("🖱️  Opening browser for node selection...")
-    webbrowser.open('http://localhost:8080')
-    
-    # Wait for selections
-    print("\nWaiting for node selections...")
-    selections_received.wait()
-    
-    # Validate selections
-    print("Validating selections...")
     start = int(selected_nodes.get('start'))
     end = int(selected_nodes.get('end'))
-    
-    if start not in G_undirected.nodes or end not in G_undirected.nodes:
-        raise ValueError("Invalid node selections")
-    if start == end:
-        raise ValueError("Start and end nodes must be different")
 
-    # Generate traffic data
-    print("Generating traffic simulation...")
-    traffic_data = generate_random_traffic(G_undirected)
-    
-    # Initialize environment and agent
-    print("Initializing AI agent...")
-    env = CityTrafficEnv(
+    if start not in G_undirected.nodes or end not in G_undirected.nodes:
+        return jsonify({"error": "Invalid node selection"}), 400
+    if start == end:
+        return jsonify({"error": "Start/end must differ"}), 400
+
+    # Create environment and agent
+    current_env = CityTrafficEnv(
         graph=G_undirected,
         start_node=start,
         goal_node=end,
@@ -90,7 +98,7 @@ def main_workflow(place):
     )
     
     agent = QLearningAgent(
-        env,
+        current_env,
         alpha=0.1,
         gamma=0.9,
         epsilon=0.5,
@@ -98,37 +106,36 @@ def main_workflow(place):
         min_epsilon=0.05
     )
     
-    # Training loop
-    print("\nTraining started:")
-    for ep in range(1000):
-        state, _ = env.reset()
+    # Train the agent
+    episodes = 1000  
+    for ep in range(episodes):
+        state, _ = current_env.reset()
         done = False
         while not done:
             action = agent.choose_action(state)
-            next_state, reward, done, _, _ = env.step(action)
+            next_state, reward, done, _, _ = current_env.step(action)
             agent.update(state, action, reward, next_state, done)
             state = next_state
         agent.update_exploration()
 
-        if (ep + 1) % 100 == 0:
-            print(f"Episode {ep+1}/1000 (ε: {agent.epsilon:.2f})")
+    # Get the optimal route
+    optimal_path = get_shortest_path(agent, current_env)
 
-    # Generate results
-    print("\nGenerating optimized route...")
-    optimal_path = get_shortest_path(agent, env)
-    visualize_route_folium(G_undirected, traffic_data, optimal_path)
-    
-    print("\n🎉 Optimization complete!")
-    print("   ▶️  Open 'final_route_map.html' to view the optimized route")
+    # Generate final route visualization
+    visualize_route_folium(G_undirected, traffic_data, optimal_path, output_map="templates/final_route_map.html")
+
+    # Redirect to final route page after training
+    return jsonify({"redirect_url": url_for('serve_final_map')})
+
+
+@app.route('/final')
+def serve_final_map():
+    """
+    Show the final route map after training is complete
+    """
+    return render_template('final_route_map.html')
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='AI Route Optimizer')
-    parser.add_argument('--place', type=str, required=True,
-                       help='Location (e.g., "Los Alamitos, California, USA")')
-    args = parser.parse_args()
-    
-    try:
-        main_workflow(args.place)
-    except Exception as e:
-        print(f"\n❌ Error: {e}")
-        print("   Please check your input and try again")
+    # For local testing: python main.py
+    # Then open http://127.0.0.1:8080
+    app.run(debug=True, port=8080)

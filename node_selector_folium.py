@@ -187,7 +187,7 @@ class FoliumNodeSelector:
             statusDiv.textContent = "Submitting selections...";
             statusDiv.style.color = "#2196F3";
 
-            fetch('http://localhost:8080/selections', {
+            fetch('/selections', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -199,12 +199,14 @@ class FoliumNodeSelector:
                 mode: 'cors'
             })
             .then(response => {
-                if(response.ok) {
-                    statusDiv.textContent = "Optimization started! Check console...";
-                    statusDiv.style.color = "#4CAF50";
-                    setTimeout(() => window.close(), 2000);
+                if (response.ok) return response.json();
+                throw new Error('Server error');
+            })
+            .then(data => {
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
                 } else {
-                    throw new Error('Server error');
+                    throw new Error('Missing redirect URL');
                 }
             })
             .catch(error => {

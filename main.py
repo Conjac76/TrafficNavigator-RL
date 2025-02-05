@@ -72,10 +72,6 @@ def serve_map():
 
 @app.route('/selections', methods=['POST'])
 def handle_selections():
-    """
-    Once user selects start/end nodes, we do Q-Learning training and produce final_route_map.html.
-    Then, automatically redirect the user to the final map page.
-    """
     global selected_nodes, G_undirected, traffic_data, current_env, agent
     data = request.get_json()
     selected_nodes.update(data)
@@ -122,9 +118,9 @@ def handle_selections():
     optimal_path = get_shortest_path(agent, current_env)
 
     # Generate final route visualization
-    visualize_route_folium(G_undirected, traffic_data, optimal_path, output_map="templates/final_route_map.html")
+    visualize_route_folium(G_undirected, traffic_data, optimal_path, 
+                         output_map="templates/final_route_map.html")
 
-    # Redirect to final route page after training
     return jsonify({"redirect_url": url_for('serve_final_map')})
 
 

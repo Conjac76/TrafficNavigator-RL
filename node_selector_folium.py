@@ -14,7 +14,7 @@ class FoliumNodeSelector:
         self.graph = graph
         self.traffic_dict = traffic_dict
 
-    def create_selection_map(self, map_path="node_selection_map.html"):
+    def create_selection_map(self, map_path="templates/node_selection_map.html"):
         center_lat, center_lon = self._get_graph_center_lat_lon()
         folium_map = folium.Map(
             location=[center_lat, center_lon], 

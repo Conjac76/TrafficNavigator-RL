@@ -44,8 +44,7 @@ Show an animated visualization of the learned path
 1. **Visualization path animation is hideous**:
     Currently in the animated path it is hard to see the path the agent is taking we need to change the colors or something
 
-2. **Visualization for start and end input is ugly**:
-    It should pause when I click the end goal so we can see it better  
+2. **We should be able to drop a pin on any point on the map**
 
 3. **....**:
     more more more

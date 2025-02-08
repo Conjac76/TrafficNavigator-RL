@@ -17,6 +17,10 @@ from visualization_folium import visualize_route_folium
 app = Flask(__name__)
 CORS(app)
 
+# Disable caching of templates and static files.
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
 # Global variables to store user data
 selected_nodes = {}
 traffic_data = {}
@@ -73,6 +77,9 @@ def initialize_place():
     # Overwrite the file so that the latest version is served (with no caching)
     selector.create_selection_map(map_path="templates/node_selection_map.html")
 
+    # Clear Jinja's template cache so that the updated HTML is reloaded.
+    app.jinja_env.cache = {}
+
     # 4) Redirect user to the map page
     return redirect(url_for('serve_map'))
 
@@ -81,7 +88,8 @@ def serve_map():
     """
     Serves the interactive Folium map for node selection
     """
-    return render_template('node_selection_map.html')
+    # Append a dummy query parameter to ensure the browser loads a fresh copy.
+    return render_template('node_selection_map.html', _=random.random())
 
 @app.route('/selections', methods=['POST'])
 def handle_selections():

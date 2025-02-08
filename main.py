@@ -100,7 +100,7 @@ def handle_selections():
     )
     
     # Train the agent
-    episodes = 1000  
+    episodes = 3000 
     for ep in range(episodes):
         state, _ = current_env.reset()
         done = False

@@ -126,10 +126,7 @@ def handle_selections():
 
 @app.route('/final')
 def serve_final_map():
-    """
-    Show the final route map after training is complete
-    """
-    return render_template('final_route_map.html')
+    return send_from_directory('templates', 'final_route_map.html')
 
 if __name__ == "__main__":
     # For local testing: python main.py

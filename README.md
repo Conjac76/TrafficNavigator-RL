@@ -1,7 +1,7 @@
 # Traffic Navigator: Reinforcement Learning for Optimal Route Planning
 
 **Hosted on Render**: [https://trafficnavigator-rl.onrender.com](https://trafficnavigator-rl.onrender.com)  
-*Note: Render's free tier has cold starts - choose small cities (e.g., "Los Alamitos, CA, USA") for proper performance*
+<span style="color:red">*Note: Render's free tier has cold starts - choose small cities (e.g., "Los Alamitos, CA, USA") for proper performance*</span>
 
 ## Overview
 This project implements a **Q-learning agent** to navigate simulated urban traffic networks. The system:

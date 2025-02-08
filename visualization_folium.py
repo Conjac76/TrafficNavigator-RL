@@ -8,7 +8,7 @@ def get_traffic_color(cost):
     elif cost <= 8: return 'red'
     else: return 'black'
 
-def visualize_route_folium(graph, traffic_dict, path, output_map="template/final_route_map.html"):
+def visualize_route_folium(graph, traffic_dict, path, output_map="templates/final_route_map.html"):
     # 1) Print the route for debugging
     print("[visualize_route_folium] The path is:", path)
 

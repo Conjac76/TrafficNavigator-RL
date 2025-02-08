@@ -58,14 +58,17 @@ class FoliumNodeSelector:
 
     def _add_clickable_node(self, layer, node_id, data):
         html = f"""
-        <div style="font-size: 14px; padding: 8px; background: white; border-radius: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+        <div style="font-size: 14px; padding: 8px; background: white; border-radius: 5px; 
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
             <div style="color: #2b5876; font-weight: bold; margin-bottom: 5px;">Node {node_id}</div>
             <button onclick="handleNodeSelect({node_id}, 'start')" 
-                    style="margin: 3px; padding: 4px 10px; background: #4CAF50; border: none; color: white; border-radius: 3px; cursor: pointer;">
+                    style="margin: 3px; padding: 4px 10px; background: #4CAF50; border: none; color: white; 
+                    border-radius: 3px; cursor: pointer;">
                 Set as Start
             </button>
             <button onclick="handleNodeSelect({node_id}, 'end')" 
-                    style="margin: 3px; padding: 4px 10px; background: #f44336; border: none; color: white; border-radius: 3px; cursor: pointer;">
+                    style="margin: 3px; padding: 4px 10px; background: #f44336; border: none; color: white; 
+                    border-radius: 3px; cursor: pointer;">
                 Set as End
             </button>
         </div>
@@ -118,6 +121,9 @@ class FoliumNodeSelector:
         folium_map.get_root().html.add_child(folium.Element(legend_html))
 
     def _add_selection_controls(self, folium_map):
+        # ------------------------- CHANGED HERE --------------------------------
+        # Use either standard string concatenation or proper template literals with backticks.
+        # This ensures the selected node IDs actually appear in the "Start" and "End" text.
         html = """
         <div id="control-panel" style="
             position: fixed;
@@ -162,10 +168,12 @@ class FoliumNodeSelector:
             
             if(type === 'start') {
                 selectedStart = nodeId;
-                document.getElementById('start-node').textContent = `Start: ${nodeId}`;
+                // Corrected string concatenation:
+                document.getElementById('start-node').textContent = "Start: " + nodeId;
             } else {
                 selectedEnd = nodeId;
-                document.getElementById('end-node').textContent = `End: ${nodeId}`;
+                // Corrected string concatenation:
+                document.getElementById('end-node').textContent = "End: " + nodeId;
             }
         }
 

@@ -5,11 +5,9 @@ import numpy as np
 import networkx as nx
 import osmnx as ox
 import os
-from flask import Flask, request, jsonify, send_from_directory, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 from flask_cors import CORS
-import threading
-import time
-# import webbrowser  # We'll not auto-open the browser
+
 from environment import CityTrafficEnv
 from agent import QLearningAgent
 from utils import generate_random_traffic, get_shortest_path
@@ -57,7 +55,6 @@ def initialize_place():
 
     # 3) Create Folium map for node selection
     selector = FoliumNodeSelector(G_undirected, traffic_data)
-    # This will save 'node_selection_map.html' in your current folder (or specify templates folder)
     selector.create_selection_map(map_path="templates/node_selection_map.html")
 
     # 4) Redirect user to the map page
@@ -114,19 +111,21 @@ def handle_selections():
             state = next_state
         agent.update_exploration()
 
-    # Get the optimal route
+    # Get the optimal route from Q-table
     optimal_path = get_shortest_path(agent, current_env)
 
     # Generate final route visualization
     visualize_route_folium(G_undirected, traffic_data, optimal_path, 
-                         output_map="templates/final_route_map.html")
+                           output_map="templates/final_route_map.html")
 
     return jsonify({"redirect_url": url_for('serve_final_map')})
 
-
 @app.route('/final')
 def serve_final_map():
-    return send_from_directory('templates', 'final_route_map.html')
+    """
+    Show the final route map after training is complete
+    """
+    return render_template('final_route_map.html')
 
 if __name__ == "__main__":
     # For local testing: python main.py

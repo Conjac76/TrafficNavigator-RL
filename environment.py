@@ -72,13 +72,13 @@ class CityTrafficEnv(gym.Env):
         return self.nodes.index(self.current_node)
 
     def _get_recent_nodes(self):
-        """Get nodes from recent history (excluding current node)"""
+        """Get nodes from recent history (excluding current node)."""
         if len(self.visited_nodes) >= self.loop_prevention_window:
             return self.visited_nodes[-self.loop_prevention_window:-1]
         return self.visited_nodes[:-1] if len(self.visited_nodes) > 0 else []
 
     def _prevent_loops(self, proposed_node, neighbors, recent_nodes):
-        """Ensure next node isn't in recent history"""
+        """Ensure next node isn't in recent history."""
         if proposed_node in recent_nodes:
             valid_neighbors = [n for n in neighbors if n not in recent_nodes]
             if valid_neighbors:

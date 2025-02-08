@@ -11,7 +11,10 @@ def generate_random_traffic(graph, low=1, high=10):
     return traffic_dict
 
 def get_shortest_path(agent, env):
-    """Extract the path using learned Q-values."""
+    """
+    Extract the path using the learned Q-values.
+    Essentially "follow the best actions" from the start until the goal.
+    """
     path = []
     state, _ = env.reset()
     path.append(env.nodes[state])

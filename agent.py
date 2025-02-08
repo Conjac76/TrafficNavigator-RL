@@ -27,5 +27,5 @@ class QLearningAgent:
         self.Q[state, action] += self.alpha * td_error
 
     def update_exploration(self):
-        """Decay exploration rate while maintaining minimum"""
+        """Decay exploration rate while maintaining minimum."""
         self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)

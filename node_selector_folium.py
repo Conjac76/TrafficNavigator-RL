@@ -1,5 +1,6 @@
 import folium
 import osmnx as ox
+import random
 
 def get_traffic_color(cost):
     """Color coding matching the final visualization"""
@@ -121,9 +122,6 @@ class FoliumNodeSelector:
         folium_map.get_root().html.add_child(folium.Element(legend_html))
 
     def _add_selection_controls(self, folium_map):
-        # ------------------------- CHANGED HERE --------------------------------
-        # Use either standard string concatenation or proper template literals with backticks.
-        # This ensures the selected node IDs actually appear in the "Start" and "End" text.
         html = """
         <div id="control-panel" style="
             position: fixed;
@@ -168,11 +166,9 @@ class FoliumNodeSelector:
             
             if(type === 'start') {
                 selectedStart = nodeId;
-                // Corrected string concatenation:
                 document.getElementById('start-node').textContent = "Start: " + nodeId;
             } else {
                 selectedEnd = nodeId;
-                // Corrected string concatenation:
                 document.getElementById('end-node').textContent = "End: " + nodeId;
             }
         }

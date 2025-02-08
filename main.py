@@ -24,6 +24,14 @@ G_undirected = None
 current_env = None
 agent = None
 
+@app.after_request
+def add_no_cache_header(response):
+    """Prevent browser caching so that a new map is always loaded."""
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
 @app.route('/')
 def home_page():
     """
@@ -37,7 +45,14 @@ def initialize_place():
     Get City, State, Country from form, build place string, load graph, generate traffic, 
     and create node_selection_map.html for interactive selection.
     """
-    global G_undirected, traffic_data
+    global G_undirected, traffic_data, selected_nodes, current_env, agent
+
+    # Clear previous globals to ensure a fresh start
+    selected_nodes = {}
+    G_undirected = None
+    traffic_data = {}
+    current_env = None
+    agent = None
 
     city = request.form.get('city')
     state = request.form.get('state')
@@ -55,6 +70,7 @@ def initialize_place():
 
     # 3) Create Folium map for node selection
     selector = FoliumNodeSelector(G_undirected, traffic_data)
+    # Overwrite the file so that the latest version is served (with no caching)
     selector.create_selection_map(map_path="templates/node_selection_map.html")
 
     # 4) Redirect user to the map page
@@ -79,7 +95,7 @@ def handle_selections():
     if start not in G_undirected.nodes or end not in G_undirected.nodes:
         return jsonify({"error": "Invalid node selection"}), 400
     if start == end:
-        return jsonify({"error": "Start/end must differ"}), 400
+        return jsonify({"error": "Start and end nodes must differ"}), 400
 
     # Create environment and agent
     current_env = CityTrafficEnv(

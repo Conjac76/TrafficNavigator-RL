@@ -1,18 +1,34 @@
-# City Traffic RL Navigator
+# Traffic Navigator: Reinforcement Learning for Optimal Route Planning
 
-A reinforcement learning (Q-learning) agent that navigates traffic in a real-world city using OpenStreetMap data. Visualizes optimal paths with traffic-aware routing.
+**Hosted on Render**: [https://trafficnavigator-rl.onrender.com](https://trafficnavigator-rl.onrender.com)  
+*Note: Render's free tier has cold starts - choose small cities (e.g., "Palo Alto, CA, USA") for faster performance*
 
-![Demo](demo.gif)  <!-- Add a demo GIF -->
+## Overview
+This project implements a **Q-learning agent** to navigate simulated urban traffic networks. The system:
+1. Downloads real-world city maps using OpenStreetMap data
+2. Converts road networks into graph structures
+3. Simulates dynamic traffic conditions
+4. Trains an RL agent to find time-optimal routes
+5. Provides interactive web visualization of results
 
-## Features
-- Real-world city graphs via OSMnx
-- Q-learning agent with traffic-aware routing
-- Animated visualization of learned paths
-- Customizable locations (any city/coordinates worldwide)
 
-## Requirements
-- Python 3.8+
-- [requirements.txt]
+## Key Features
+- **Real Map Integration**: OSMnx library downloads actual city layouts
+- **Traffic Simulation**: Dynamic edge weights representing congestion levels
+- **Q-learning Core**: Custom implementation with ε-greedy exploration
+- **Web Interface**: Flask-based UI with Folium visualization
+- **Loop Prevention**: History-based action masking
+- **Adaptive Learning**: Decaying exploration rate
+
+## Tech Stack
+| Component | Technologies |
+|-----------|--------------|
+| **Backend** | Python 3.10, Flask, OSMnx, NetworkX |
+| **RL Core** | Gym-style environment, NumPy Q-learning |
+| **Visualization** | Folium, Leaflet.js |
+| **Deployment** | Render, Gunicorn |
+| **Supporting** | Pandas, requests, random |
+
 
 ## Installation
 
@@ -20,31 +36,101 @@ A reinforcement learning (Q-learning) agent that navigates traffic in a real-wor
    ```bash
    git clone https://github.com/Conjac76/TrafficNavigator-RL
    cd TrafficNavigator-RL
-
 2. **Install dependencies**:
-
     ```bash
     pip install -r requirements.txt
 
-## Usage
-
-1. **Basic Execution**:
-
+## Usage 
+1. **Start Application**:
     ```bash
-    python main.py --place "Los Alamitos, California, USA"
-    
-**This will:**
-Download a map of Los Alamitos, California
-Generate random traffic patterns
-Train the Q-learning agent for 200 episodes
-Show an animated visualization of the learned path
+    python main.py
+2. **Access Local Host**:
+    ```bash
+    http://127.0.0.1:8080/
+3. **Input City information**:
+    ```bash
+    E.g. Los Alamitos, CA, USA
+
+4. **Select start/end nodes on interactive map**
+
+5. **View optimized route after training completes**
 
 
-## TODO: Feel free to add to this list
-1. **Visualization path animation is hideous**:
-    Currently in the animated path it is hard to see the path the agent is taking we need to change the colors or something
+## Graph Processing Pipline
 
-2. **We should be able to drop a pin on any point on the map**
+graph LR
+    A[OSMnx Raw Data] --> B[NetworkX Graph]
+    B --> C[Traffic Augmentation]
+    C --> D[Gym Environment]
 
-3. **....**:
-    more more more
+Undirected graphs for bidirectional traffic modeling
+
+Node degree normalization for action space consistency
+
+Coordinate preservation for accurate geovisualization
+
+# Web Interface Choices
+
+Folium
+
+Native Python integration
+
+Leaflet.js mapping capabilities
+
+Custom HTML/JS injection for interactivity
+
+Flask for lightweight state management
+
+Render deployment for zero-cost hosting
+
+## Key Components
+**agent.py**:
+ε-decay strategy balances exploration/exploitation
+
+Tabular Q-learning with temporal difference updates
+
+State-action space sized to environment observations
+
+**environment.py**:
+Gym-compliant API for RL standardization
+
+Traffic cost lookup with bidirection fallback
+
+Recent node tracking prevents infinite loops
+
+Adaptive action masking for invalid moves
+
+**main.py**:
+Flask app state management
+
+OSMnx graph loading pipeline
+
+Training loop orchestration
+
+Route visualization endpoints
+
+
+## Limitations
+**City Size Constraints**:
+
+OSMnx downloads struggle with large metros
+
+Graph conversion scales O(n²) with nodes
+
+Training time grows exponentially with graph size
+
+**Simulation Reality Gap**:
+
+Synthetic traffic data (randomized weights)
+
+No real-time traffic integration
+
+Simplified reward structure
+
+**Algorithmic**:
+
+Q-table memory limits state space
+
+No deep RL for generalization
+
+Discrete actions limit route granularity

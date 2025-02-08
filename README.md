@@ -84,14 +84,14 @@ Flask for lightweight state management
 Render deployment for zero-cost hosting
 
 ## Key Components
-**agent.py**:
+### agent.py:
 ε-decay strategy balances exploration/exploitation
 
 Tabular Q-learning with temporal difference updates
 
 State-action space sized to environment observations
 
-**environment.py**:
+### environment.py:
 Gym-compliant API for RL standardization
 
 Traffic cost lookup with bidirection fallback
@@ -100,7 +100,7 @@ Recent node tracking prevents infinite loops
 
 Adaptive action masking for invalid moves
 
-**main.py**:
+### main.py:
 Flask app state management
 
 OSMnx graph loading pipeline
@@ -111,7 +111,7 @@ Route visualization endpoints
 
 
 ## Limitations
-**City Size Constraints**:
+### City Size Constraints:
 
 OSMnx downloads struggle with large metros
 
@@ -119,7 +119,7 @@ Graph conversion scales O(n²) with nodes
 
 Training time grows exponentially with graph size
 
-**Simulation Reality Gap**:
+### Simulation Reality Gap:
 
 Synthetic traffic data (randomized weights)
 
@@ -127,7 +127,7 @@ No real-time traffic integration
 
 Simplified reward structure
 
-**Algorithmic**:
+### Algorithmic:
 
 Q-table memory limits state space
 

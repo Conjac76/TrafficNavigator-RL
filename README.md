@@ -5,12 +5,30 @@
 <span style="color:red">*Note: Render's free tier has cold starts - choose small cities (e.g., "Los Alamitos, CA, USA") for proper performance*</span>
 
 ## Overview
-This project implements a **Q-learning agent** to navigate simulated urban traffic networks. The system:
-1. Downloads real-world city maps using OpenStreetMap data
-2. Converts road networks into graph structures
-3. Simulates dynamic traffic conditions
-4. Trains an RL agent to find time-optimal routes
-5. Provides interactive web visualization of results
+This project implements a **Q-learning agent** to navigate simulated urban traffic networks.
+
+
+### Data Ingestion & Preprocessing
+- **OSMnx** is used to download and convert real-world city maps into graph representations.
+- The traffic simulation is set up by augmenting these graphs with synthetic traffic data.
+
+### Environment & Agent Setup
+- A custom **Gym-style environment** is implemented in `environment.py`.
+- A simple **Q-learning agent** is implemented in `agent.py` and trained within the environment.
+- These components form the core of the reinforcement learning pipeline.
+
+### Training Loop
+- The training loop is orchestrated in `main.py`.
+- The agent is trained over a series of episodes, with exploration parameters decaying over time.
+
+### Visualization & Deployment
+- The final optimized route is visualized using **Folium**.
+- A **Flask-based web interface** allows users to interact with the simulation and view results.
+
+
+
+
+
 
 
 ## Key Features
@@ -135,3 +153,8 @@ Q-table memory limits state space
 No deep RL for generalization
 
 Discrete actions limit route granularity
+
+## Future Directions:
+Consider improvements in scalability (graph indexing, parallelization), algorithmic enhancements (deep RL, experience replay), real-time traffic integration, enhanced UI/UX, and better testing/logging.
+
+

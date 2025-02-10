@@ -1,3 +1,4 @@
+# main.py
 import argparse
 import json
 import random
@@ -14,14 +15,15 @@ from utils import generate_random_traffic, get_shortest_path
 from node_selector_folium import FoliumNodeSelector
 from visualization_folium import visualize_route_folium
 
+# Create Flask application instance.
 app = Flask(__name__)
 CORS(app)
 
-# Disable caching of templates and static files.
+# Disable caching of templates and static files to ensure fresh updates.
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
-# Global variables to store user data
+# Global variables to store application state.
 selected_nodes = {}
 traffic_data = {}
 G_undirected = None
@@ -30,7 +32,9 @@ agent = None
 
 @app.after_request
 def add_no_cache_header(response):
-    """Prevent browser caching so that a new map is always loaded."""
+    """
+    Add headers to disable caching on responses.
+    """
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
@@ -39,73 +43,79 @@ def add_no_cache_header(response):
 @app.route('/')
 def home_page():
     """
-    Home page: user enters City, State, Country
+    Render the home page where users input city details.
     """
     return render_template('index.html')
 
 @app.route('/initialize', methods=['POST'])
 def initialize_place():
     """
-    Get City, State, Country from form, build place string, load graph, generate traffic, 
-    and create node_selection_map.html for interactive selection.
+    Process form input, load city graph, generate traffic data, and create an interactive map.
     """
     global G_undirected, traffic_data, selected_nodes, current_env, agent
 
-    # Clear previous globals to ensure a fresh start
+    # Reset globals for fresh session.
     selected_nodes = {}
     G_undirected = None
     traffic_data = {}
     current_env = None
     agent = None
 
+    # Get city details from form.
     city = request.form.get('city')
     state = request.form.get('state')
     country = request.form.get('country')
     place = f"{city}, {state}, {country}"
 
-    print(f"User requested place: {place}")
+    print(f"[initialize_place] User requested place: {place}")
 
-    # 1) Load graph
+    # 1) Load the road network graph using osmnx.
     G = ox.graph_from_place(place, network_type="drive")
+    # Convert directed graph to undirected for bidirectional traffic modeling.
     G_undirected = nx.Graph(G)
 
-    # 2) Generate random traffic
+    # 2) Generate synthetic traffic data for each edge.
     traffic_data = generate_random_traffic(G_undirected)
 
-    # 3) Create Folium map for node selection
+    # 3) Create an interactive map for node selection using Folium.
     selector = FoliumNodeSelector(G_undirected, traffic_data)
-    # Overwrite the file so that the latest version is served (with no caching)
     selector.create_selection_map(map_path="templates/node_selection_map.html")
 
-    # Clear Jinja's template cache so that the updated HTML is reloaded.
+    # Clear Jinja’s template cache to load the updated map.
     app.jinja_env.cache = {}
 
-    # 4) Redirect user to the map page
+    # 4) Redirect the user to the map page.
     return redirect(url_for('serve_map'))
 
 @app.route('/map')
 def serve_map():
     """
-    Serves the interactive Folium map for node selection
+    Serve the node selection map.
     """
-    # Append a dummy query parameter to ensure the browser loads a fresh copy.
+    # The random query parameter ensures the browser loads a fresh copy.
     return render_template('node_selection_map.html', _=random.random())
 
 @app.route('/selections', methods=['POST'])
 def handle_selections():
+    """
+    Handle node selections from the user, initialize environment and agent, and train the Q-learning agent.
+    """
     global selected_nodes, G_undirected, traffic_data, current_env, agent
+
+    # Retrieve selected start and end nodes.
     data = request.get_json()
     selected_nodes.update(data)
 
     start = int(selected_nodes.get('start'))
     end = int(selected_nodes.get('end'))
 
+    # Validate node selection.
     if start not in G_undirected.nodes or end not in G_undirected.nodes:
         return jsonify({"error": "Invalid node selection"}), 400
     if start == end:
         return jsonify({"error": "Start and end nodes must differ"}), 400
 
-    # Create environment and agent
+    # Initialize the traffic environment.
     current_env = CityTrafficEnv(
         graph=G_undirected,
         start_node=start,
@@ -114,6 +124,7 @@ def handle_selections():
         max_steps=300
     )
     
+    # Initialize the Q-learning agent with specified parameters.
     agent = QLearningAgent(
         current_env,
         alpha=0.1,
@@ -123,35 +134,39 @@ def handle_selections():
         min_epsilon=0.05
     )
     
-    # Train the agent
-    episodes = 3000 
+    # Train the agent over a number of episodes.
+    episodes = 3000
     for ep in range(episodes):
         state, _ = current_env.reset()
         done = False
         while not done:
+            # Agent chooses an action.
             action = agent.choose_action(state)
+            # Environment returns next state and reward.
             next_state, reward, done, _, _ = current_env.step(action)
+            # Update Q-table based on experience.
             agent.update(state, action, reward, next_state, done)
             state = next_state
+        # Decay exploration rate after each episode.
         agent.update_exploration()
 
-    # Get the optimal route from Q-table
+    # Retrieve the optimal path from the learned Q-values.
     optimal_path = get_shortest_path(agent, current_env)
 
-    # Generate final route visualization
-    visualize_route_folium(G_undirected, traffic_data, optimal_path, 
+    # Generate a final route visualization map.
+    visualize_route_folium(G_undirected, traffic_data, optimal_path,
                            output_map="templates/final_route_map.html")
 
+    # Return the redirect URL for final route map.
     return jsonify({"redirect_url": url_for('serve_final_map')})
 
 @app.route('/final')
 def serve_final_map():
     """
-    Show the final route map after training is complete
+    Render the final route map.
     """
     return render_template('final_route_map.html')
 
 if __name__ == "__main__":
-    # For local testing: python main.py
-    # Then open http://127.0.0.1:8080
+    # Run the Flask app for local testing.
     app.run(debug=True, port=8080)

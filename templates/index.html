@@ -1,115 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traffic Simulator</title>
-
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-            height: 100vh;
-            background-color: #111;
-            color: white;
-        }
-
-        /* Background animation of a passing map */
-        @keyframes mapAnimation {
-            0% {
-                background-position: 0 0;
-            }
-            100% {
-                background-position: 100% 0;
-            }
-        }
-
-        .background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('https://help.openstreetmap.org/upfiles/Screenshot_2022-01-07_at_15.31.39.png');
-            background-size: cover;
-            animation: mapAnimation 30s linear infinite;
-            z-index: -1;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 3em;
-            margin-top: 50px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 50px;
-        }
-
-        input {
-            background-color: #333;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            margin: 10px 0;
-            width: 250px;
-            font-size: 1em;
-        }
-
-        input:focus {
-            outline: none;
-            background-color: #444;
-        }
-
-        button {
-            background-color: #555;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #666;
-        }
-
-        /* Centering the form inside the page */
-        .form-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 80vh;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traffic Simulator</title>
+  <style>
+    /* Reset some defaults */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      background-color: #111;
+      color: black;
+    }
+    /* Background container – holds the sliding images */
+    .background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: -1;
+    }
+    /* The slider holds two copies of the image side by side */
+    .slider {
+      display: flex;
+      width: 200%;  /* twice the container's width */
+      height: 100%;
+      animation: slide 30s linear infinite;
+    }
+    /* Each image takes half of the slider width */
+    .slider img {
+      width: 50%;
+      height: 100%;
+      object-fit: cover;
+    }
+    /* Keyframes: animate from 0 to -50% translation (one full image width) */
+    @keyframes slide {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+    /* Content styling */
+    .form-container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80vh;
+      flex-direction: column;
+    }
+    h1 {
+      text-align: center;
+      font-size: 3em;
+      margin-top: 20px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+    input {
+      background-color: #333;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      margin: 10px 0;
+      width: 250px;
+      font-size: 1em;
+    }
+    input:focus {
+      outline: none;
+      background-color: #444;
+    }
+    button {
+      background-color: #555;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #666;
+    }
+    /* Alert box styling */
+    .alert {
+      padding: 20px;
+      background-color: #f44336; /* Red */
+      color: white;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      position: relative;
+      width: 80%;
+      max-width: 600px;
+      text-align: center;
+    }
+    .closebtn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .closebtn:hover {
+      color: black;
+    }
+  </style>
 </head>
 <body>
-    <div class="background"></div> <!-- Map background animation -->
-    
-    <div class="form-container">
-        <div>
-            <h1>Traffic Simulator</h1>
-            <p>Enter your City, State, and Country:</p>
-            <form action="/initialize" method="POST">
-                <label for="city">City:</label>
-                <input type="text" name="city" id="city" required><br><br>
-                
-                <label for="state">State:</label>
-                <input type="text" name="state" id="state" required><br><br>
-                
-                <label for="country">Country:</label>
-                <input type="text" name="country" id="country" required><br><br>
-                
-                <button type="submit">Start Selection</button>
-            </form>
-        </div>
+  <!-- Background with sliding images -->
+  <div class="background">
+    <div class="slider">
+      <img src="https://www.yellowmaps.com/maps/img/US/printable/USA-081919.jpg" alt="Map Background">
+      <img src="https://www.yellowmaps.com/maps/img/US/printable/USA-081919.jpg" alt="Map Background">
     </div>
+  </div>
+  
+  <div class="form-container">
+    <!-- Alert Box -->
+    <div class="alert">
+      <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+      <strong>Note:</strong> Due to the computational demands of processing large metropolitan areas, this application is optimized for smaller cities, in the United States. Additionally, this traffic simulation uses synthetic data and does not reflect real time conditions.
+    </div>
+    <h1>Traffic Simulator</h1>
+    <form action="/initialize" method="POST">
+      <label for="city">City:</label>
+      <input type="text" name="city" id="city" required><br><br>
+      <label for="state">State:</label>
+      <input type="text" name="state" id="state" required><br><br>
+      <label for="country">Country:</label>
+      <input type="text" name="country" id="country" required><br><br>
+      <button type="submit">Start Selection</button>
+    </form>
+  </div>
 </body>
 </html>
